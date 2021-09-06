@@ -1,6 +1,7 @@
-package co.`fun`.joker
+package co.`fun`.joker.util
 
-import org.junit.jupiter.api.Test
+import co.`fun`.joker.loadData
+import co.`fun`.joker.runBlockingWithDefersU
 import java.io.File
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -12,11 +13,8 @@ private class Stats(
     var failed: Int = 0,
 )
 
-val resultFile = File("times/test.csv").apply { parentFile.mkdirs() }
-
-class CollectData {
-    @Test
-    fun collectData() = runBlockingWithDefersU {
+object DataCollector {
+    fun collectData(resultFile: File) = runBlockingWithDefersU {
         val output = resultFile.bufferedWriter().apply { defer { close() } }
 
         val data = sortedMapOf<Int, Stats>()
