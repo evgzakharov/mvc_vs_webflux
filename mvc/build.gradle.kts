@@ -15,5 +15,8 @@ tasks.withType<Jar> {
 }
 
 dependencies {
+    implementation(project(":common"))
+
     implementation("org.springframework.boot:spring-boot-starter-web:$springVersion")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb:$springVersion")
 }

@@ -5,4 +5,6 @@ include(
     "mvc",
     "webflux",
     "webflux_coroutines",
+    "service",
+    "common"
 )

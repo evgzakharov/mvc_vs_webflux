@@ -1,27 +1,51 @@
 package co.`fun`.joker
 
+import co.`fun`.joker.api.ModerationRequest
+import co.`fun`.joker.api.ModerationResponse
 import co.`fun`.joker.util.DataCollector
 import co.`fun`.joker.util.LoadTester
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.java.Java
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.contentType
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
+import java.util.UUID
+import kotlin.random.Random
 
 val loadData = File("times/test.txt").apply { parentFile.mkdirs() }
 val collectData = File("times/test.csv").apply { parentFile.mkdirs() }
 
 class LoadTest {
-    private val ktorClientJava = HttpClient(Java)
+    private val ktorClientJava = HttpClient(Java) {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer()
+        }
+    }
 
     private val simpleUrl = "http://localhost:8080/joker2021/simple"
     private val cpuLoadUrl = "http://localhost:8080/joker2021/cpu-load"
     private val chainUrl = "http://localhost:8080/joker2021/chain"
+    private val moderationUrl = "http://localhost:8080/joker2021/moderation"
 
     @Test
     fun `test response`() = runBlockingWithDefersU {
         val response = request(chainUrl)
+        println(response)
+    }
+
+    @Test
+    fun `test moderation response`() = runBlockingWithDefersU {
+        val response = runCatching {
+            ktorClientJava.post<ModerationResponse>(moderationUrl) {
+                contentType(io.ktor.http.ContentType.Application.Json)
+                body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString())
+            }
+        }
         println(response)
     }
 

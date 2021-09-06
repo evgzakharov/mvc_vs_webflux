@@ -1,7 +1,7 @@
 package co.`fun`.joker
 
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.runBlocking
 
 @DslMarker
 annotation class DeferDsl
