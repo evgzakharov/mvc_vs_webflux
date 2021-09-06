@@ -1,20 +1,22 @@
 package co.`fun`.joker.api
 
+import co.`fun`.joker.repository.Moderation
 import co.`fun`.joker.repository.ModerationRepository
+import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.client.RestTemplate
 import java.util.concurrent.CompletableFuture.supplyAsync
 import java.util.concurrent.Executors
 
 @RestController
-@RequestMapping("joker2021")
+@RequestMapping("/joker2021")
 class ModerationController(
-    private val restTemplate: RestTemplate,
+    restTemplateBuilder: RestTemplateBuilder,
     private val moderationRepository: ModerationRepository
 ) {
+    private val restTemplate = restTemplateBuilder.build()
     private val pool = Executors.newCachedThreadPool()
     private val contentTypes = ContentType.values()
 
@@ -60,10 +62,14 @@ class ModerationController(
         return ModerationResponse(
             request.id,
             resultDecision.get(),
+            classifyAsync.get()!!.decision,
+            textClassifyResultAsync.get()?.decision,
             contentType,
             textAsync.get()?.text,
             labels.get()?.labels ?: emptyList()
-        )
+        ).also {
+            moderationRepository.save(Moderation(request.id, resultDecision.get()))
+        }
     }
 
     private fun recognizeText(request: ModerationRequest, contentType: ContentType): RecognizeResponse? {

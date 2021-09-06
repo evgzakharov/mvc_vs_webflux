@@ -124,7 +124,7 @@ class LoadTester(
         val diffFromStart = responseTime - startTime
 
         return response.getOrNull().also {
-            if (it != null)
+            if (response.isSuccess)
                 fileChannel.send("$diffFromStart;$diff;$users;1\n")
             else
                 fileChannel.send("$diffFromStart;$diff;$users;0\n")

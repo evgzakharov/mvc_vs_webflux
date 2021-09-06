@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 import kotlin.random.Random
 
 @RestController
-@RequestMapping("image")
+@RequestMapping("content")
 class ImageController {
     private val possibleValues = Decision.values()
 

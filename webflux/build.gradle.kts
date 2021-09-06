@@ -18,4 +18,5 @@ dependencies {
     implementation(project(":common"))
 
     implementation("org.springframework.boot:spring-boot-starter-webflux:$springVersion")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springVersion")
 }

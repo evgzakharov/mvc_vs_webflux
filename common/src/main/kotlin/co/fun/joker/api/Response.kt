@@ -22,7 +22,9 @@ enum class Decision {
 @Serializable
 data class ModerationResponse(
     val id: String,
-    val decision: Decision,
+    val finalDecision: Decision,
+    val contentDecision: Decision,
+    val textDecision: Decision?,
     val type: ContentType,
     val text: String?,
     val labels: List<String>

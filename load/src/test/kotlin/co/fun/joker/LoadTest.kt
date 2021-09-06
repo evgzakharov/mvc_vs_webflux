@@ -10,6 +10,7 @@ import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -34,20 +35,18 @@ class LoadTest {
 
     @Test
     fun `test response`() = runBlockingWithDefersU {
-        val response = request(chainUrl)
+        val response = request(cpuLoadUrl)
         println(response)
     }
 
     @Test
     fun `test moderation response`() = runBlockingWithDefersU {
-        val response = runCatching {
-            ktorClientJava.post<ModerationResponse>(moderationUrl) {
-                contentType(io.ktor.http.ContentType.Application.Json)
-                body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString())
-            }
+        repeat(100) {
+            val response = moderationRequest(moderationUrl)
+            println(response)
         }
-        println(response)
     }
+
 
     @Test
     fun `run io test`() = runBlockingWithDefersU {
@@ -62,7 +61,7 @@ class LoadTest {
         )
 
         val tester = LoadTester(loadData, steps)
-        tester.loadTest { request(chainUrl) }
+        tester.loadTest { moderationRequest(moderationUrl) }
 
         DataCollector.collectData(collectData)
     }
@@ -82,5 +81,12 @@ class LoadTest {
         DataCollector.collectData(collectData)
     }
 
-    private suspend fun request(url: String) = runCatching { ktorClientJava.get<String>(url) }
+    private suspend fun request(url: String): String = ktorClientJava.get(url)
+
+    private suspend fun moderationRequest(moderationUrl: String): ModerationResponse {
+        return ktorClientJava.post(moderationUrl) {
+            contentType(ContentType.Application.Json)
+            body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString())
+        }
+    }
 }
