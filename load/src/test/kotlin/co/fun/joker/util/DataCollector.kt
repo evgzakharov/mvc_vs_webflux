@@ -1,6 +1,5 @@
 package co.`fun`.joker.util
 
-import co.`fun`.joker.loadData
 import co.`fun`.joker.runBlockingWithDefersU
 import java.io.File
 import kotlin.math.floor
@@ -13,7 +12,7 @@ private class Stats(
     var failed: Int = 0,
 )
 
-object DataCollector {
+class DataCollector(private val loadData: File) {
     fun collectData(resultFile: File) = runBlockingWithDefersU {
         val output = resultFile.bufferedWriter().apply { defer { close() } }
 

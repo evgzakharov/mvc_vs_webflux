@@ -18,20 +18,21 @@ import java.time.Duration
 import java.util.UUID
 import kotlin.random.Random
 
-val loadData = File("times/test.txt").apply { parentFile.mkdirs() }
-val collectData = File("times/test.csv").apply { parentFile.mkdirs() }
-
 class LoadTest {
+    private val loadData = File("times/test.txt").apply { parentFile.mkdirs() }
+    private val collectData = File("times/test.csv").apply { parentFile.mkdirs() }
+
     private val ktorClientJava = HttpClient(Java) {
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
     }
 
-    private val simpleUrl = "http://localhost:8080/joker2021/simple"
-    private val cpuLoadUrl = "http://localhost:8080/joker2021/cpu-load"
-    private val chainUrl = "http://localhost:8080/joker2021/chain"
-    private val moderationUrl = "http://localhost:8080/joker2021/moderation"
+    private val host = "http://localhost:8080"
+    private val simpleUrl = "$host/joker2021/simple"
+    private val cpuLoadUrl = "$host/joker2021/cpu-load"
+    private val chainUrl = "$host/joker2021/chain"
+    private val moderationUrl = "$host/joker2021/moderation"
 
     @Test
     fun `test response`() = runBlockingWithDefersU {
@@ -47,38 +48,41 @@ class LoadTest {
         }
     }
 
-
     @Test
     fun `run io test`() = runBlockingWithDefersU {
-        val steps: List<Pair<Long, Int>> = listOf(
-            Duration.ofSeconds(0).toMillis() to 10,
-            Duration.ofSeconds(10).toMillis() to 100,
-            Duration.ofSeconds(20).toMillis() to 150,
-            Duration.ofSeconds(30).toMillis() to 200,
-            Duration.ofSeconds(40).toMillis() to 250,
-            Duration.ofSeconds(50).toMillis() to 300,
-            Duration.ofSeconds(61).toMillis() to 300,
-        )
+        val steps = listOf(
+            Duration.ofSeconds(0) to 10,
+            Duration.ofSeconds(10) to 100,
+            Duration.ofSeconds(20) to 150,
+            Duration.ofSeconds(30) to 200,
+            Duration.ofSeconds(40) to 250,
+            Duration.ofSeconds(50) to 300,
+            Duration.ofSeconds(61) to 300,
+        ).prepare()
 
         val tester = LoadTester(loadData, steps)
         tester.loadTest { moderationRequest(moderationUrl) }
 
-        DataCollector.collectData(collectData)
+        DataCollector(loadData).collectData(collectData)
     }
 
     @Test
     fun `run cpu test`() = runBlockingWithDefersU {
-        val steps: List<Pair<Long, Int>> = listOf(
-            Duration.ofSeconds(0).toMillis() to 1,
-            Duration.ofSeconds(50).toMillis() to 10,
-            Duration.ofSeconds(60).toMillis() to 10,
-            Duration.ofSeconds(61).toMillis() to 10,
-        )
+        val steps = listOf(
+            Duration.ofSeconds(0) to 1,
+            Duration.ofSeconds(50) to 10,
+            Duration.ofSeconds(60) to 10,
+            Duration.ofSeconds(61) to 10,
+        ).prepare()
 
         val tester = LoadTester(loadData, steps)
         tester.loadTest { request(cpuLoadUrl) }
 
-        DataCollector.collectData(collectData)
+        DataCollector(loadData).collectData(collectData)
+    }
+
+    private fun List<Pair<Duration, Int>>.prepare(): List<Pair<Long, Int>> {
+        return map { (duration, users) -> duration.toMillis() to users }
     }
 
     private suspend fun request(url: String): String = ktorClientJava.get(url)
