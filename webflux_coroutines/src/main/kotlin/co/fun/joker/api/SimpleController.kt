@@ -1,5 +1,8 @@
 package co.`fun`.joker.api
 
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -8,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/joker2021")
 class SimpleController {
     @GetMapping("simple")
-    suspend fun get(): String {
+    fun get(): String {
         return "Just simple response =)"
     }
 
@@ -23,16 +26,12 @@ class SimpleController {
 
     @GetMapping("chain")
     suspend fun chain(): Int {
-        var result = 5
+        var result = flowOf(5)
 
-        for (i in 1..10_000) {
-            result = result.transform { it + i }
+        for (i in 1..1_000) {
+            result = result.map { it + i }
         }
 
-        return result
-    }
-
-    private suspend fun Int.transform(action: (Int) -> Int): Int {
-        return action(this)
+        return result.first()
     }
 }

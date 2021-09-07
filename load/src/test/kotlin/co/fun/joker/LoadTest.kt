@@ -1,5 +1,7 @@
 package co.`fun`.joker
 
+import co.`fun`.joker.api.ContentClassifyRequest
+import co.`fun`.joker.api.ModerationPartialResponse
 import co.`fun`.joker.api.ModerationRequest
 import co.`fun`.joker.api.ModerationResponse
 import co.`fun`.joker.util.DataCollector
@@ -33,6 +35,8 @@ class LoadTest {
     private val cpuLoadUrl = "$host/joker2021/cpu-load"
     private val chainUrl = "$host/joker2021/chain"
     private val moderationUrl = "$host/joker2021/moderation"
+
+    private val classificationUrl = "${co.`fun`.joker.api.Env.SERVICE}/content/classify"
 
     @Test
     fun `test response`() = runBlockingWithDefersU {
@@ -90,6 +94,18 @@ class LoadTest {
         return ktorClientJava.post(moderationUrl) {
             contentType(ContentType.Application.Json)
             body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString(), additionalDelay = additionalDelay)
+        }
+    }
+
+    private suspend fun classificationRequest(moderationUrl: String, additionalDelay: Long? = null): ModerationPartialResponse {
+        return ktorClientJava.post(moderationUrl) {
+            contentType(ContentType.Application.Json)
+            body = ContentClassifyRequest(
+                UUID.randomUUID().toString(),
+                Random.nextLong().toString(),
+                type = co.`fun`.joker.api.ContentType.IMAGE,
+                additionalDelay = additionalDelay,
+            )
         }
     }
 }
