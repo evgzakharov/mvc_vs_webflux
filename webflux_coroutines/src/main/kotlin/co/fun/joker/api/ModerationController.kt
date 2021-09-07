@@ -3,14 +3,13 @@ package co.`fun`.joker.api
 import co.`fun`.joker.repository.Moderation
 import co.`fun`.joker.repository.ModerationRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactive.awaitFirst
-import kotlinx.coroutines.reactor.mono
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.client.WebClient
-import reactor.core.publisher.Mono
 
 @RestController
 @RequestMapping("/joker2021")
@@ -22,14 +21,14 @@ class ModerationController(
     private val contentTypes = ContentType.values()
 
     @PostMapping("moderation")
-    fun moderate(@RequestBody request: ModerationRequest): Mono<ModerationResponse> = mono {
+    suspend fun moderate(@RequestBody request: ModerationRequest): ModerationResponse = coroutineScope {
         val contentType = contentTypes.random()
 
         val moderationAsync = async { moderationRepository.findById(request.id) }
 
         val textAsync = async { recognizeText(request, contentType) }
         val textClassifyResultAsync = async {
-            textAsync.await().text?.let { text -> classifyText(TextClassifyRequest(request.id, text)) }
+            textAsync.await().text?.let { text -> classifyText(TextClassifyRequest(request.id, text, request.additionalDelay)) }
                 ?: ModerationPartialResponse("", Decision.VALID)
         }
 
@@ -43,7 +42,7 @@ class ModerationController(
         val labels = async {
             classify.let {
                 if (it.decision == Decision.NOT_SUITED)
-                    collectLabels(ContentLabelRequest(request.id, request.url))
+                    collectLabels(ContentLabelRequest(request.id, request.url, request.additionalDelay))
                 else
                     LabelsResponse("", emptyList())
             }

@@ -5,7 +5,7 @@ import co.`fun`.joker.api.ModerationResponse
 import co.`fun`.joker.util.DataCollector
 import co.`fun`.joker.util.LoadTester
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.java.Java
+import io.ktor.client.engine.apache.Apache
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import io.ktor.client.request.get
@@ -22,7 +22,7 @@ class LoadTest {
     private val loadData = File("times/test.txt").apply { parentFile.mkdirs() }
     private val collectData = File("times/test.csv").apply { parentFile.mkdirs() }
 
-    private val ktorClientJava = HttpClient(Java) {
+    private val ktorClientJava = HttpClient(Apache) {
         install(JsonFeature) {
             serializer = KotlinxSerializer()
         }
@@ -52,16 +52,14 @@ class LoadTest {
     fun `run io test`() = runBlockingWithDefersU {
         val steps = listOf(
             Duration.ofSeconds(0) to 10,
-            Duration.ofSeconds(10) to 100,
-            Duration.ofSeconds(20) to 150,
-            Duration.ofSeconds(30) to 200,
-            Duration.ofSeconds(40) to 250,
-            Duration.ofSeconds(50) to 300,
-            Duration.ofSeconds(61) to 300,
+            Duration.ofSeconds(10) to 200,
+            Duration.ofSeconds(50) to 600,
+            Duration.ofSeconds(61) to 600,
         ).prepare()
 
         val tester = LoadTester(loadData, steps)
-        tester.loadTest { moderationRequest(moderationUrl) }
+        tester.warming { moderationRequest(moderationUrl) }
+        tester.loadTest { moderationRequest(moderationUrl, additionalDelay = 500) }
 
         DataCollector(loadData).collectData(collectData)
     }
@@ -76,6 +74,7 @@ class LoadTest {
         ).prepare()
 
         val tester = LoadTester(loadData, steps)
+        tester.warming { request(cpuLoadUrl) }
         tester.loadTest { request(cpuLoadUrl) }
 
         DataCollector(loadData).collectData(collectData)
@@ -87,10 +86,10 @@ class LoadTest {
 
     private suspend fun request(url: String): String = ktorClientJava.get(url)
 
-    private suspend fun moderationRequest(moderationUrl: String): ModerationResponse {
+    private suspend fun moderationRequest(moderationUrl: String, additionalDelay: Long? = null): ModerationResponse {
         return ktorClientJava.post(moderationUrl) {
             contentType(ContentType.Application.Json)
-            body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString())
+            body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString(), additionalDelay = additionalDelay)
         }
     }
 }

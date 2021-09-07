@@ -28,7 +28,7 @@ class ModerationController(
 
         val textAsync = supplyAsync({ recognizeText(request, contentType) }, pool)
         val textClassifyResultAsync = textAsync.thenApplyAsync({
-            it?.text?.let { text -> classifyText(TextClassifyRequest(request.id, text)) }
+            it?.text?.let { text -> classifyText(TextClassifyRequest(request.id, text, request.additionalDelay)) }
                 ?: ModerationPartialResponse("", Decision.VALID)
         }, pool)
 
@@ -44,7 +44,7 @@ class ModerationController(
 
         val labels = classifyAsync.thenApplyAsync({
             if (it?.decision == Decision.NOT_SUITED)
-                collectLabels(ContentLabelRequest(request.id, request.url))
+                collectLabels(ContentLabelRequest(request.id, request.url, request.additionalDelay))
             else
                 null
         }, pool)

@@ -26,7 +26,7 @@ class ModerationController(
 
         val textAsync = recognizeText(request, contentType).cache()
         val textClassifyResultAsync = textAsync.flatMap {
-            it?.text?.let { text -> classifyText(TextClassifyRequest(request.id, text)) }
+            it?.text?.let { text -> classifyText(TextClassifyRequest(request.id, text, request.additionalDelay)) }
                 ?: Mono.just(ModerationPartialResponse("", Decision.VALID))
         }
 
@@ -39,7 +39,7 @@ class ModerationController(
 
         val labelsAsync = classifyAsync.flatMap {
             if (it?.decision == Decision.NOT_SUITED)
-                collectLabels(ContentLabelRequest(request.id, request.url))
+                collectLabels(ContentLabelRequest(request.id, request.url, request.additionalDelay))
             else
                 Mono.just(LabelsResponse("", emptyList()))
         }

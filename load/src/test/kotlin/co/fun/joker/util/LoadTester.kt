@@ -36,7 +36,6 @@ class LoadTester(
 
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-        warming(request)
         val fileJob = runFileWriteJob(output)
         val currentTasks = loadTest(Instant.now().toEpochMilli(), scope, request)
 
@@ -53,7 +52,7 @@ class LoadTester(
         }
     }
 
-    private suspend fun <T> warming(request: suspend () -> T) = coroutineScope {
+    suspend fun <T> warming(request: suspend () -> T) = coroutineScope {
         println("start warming..")
         val tasks = (1..warmingTasks).map {
             launch {
