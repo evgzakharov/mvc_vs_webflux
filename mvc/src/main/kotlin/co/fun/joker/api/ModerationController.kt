@@ -2,6 +2,7 @@ package co.`fun`.joker.api
 
 import co.`fun`.joker.repository.Moderation
 import co.`fun`.joker.repository.ModerationRepository
+import kotlinx.coroutines.runBlocking
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -24,11 +25,11 @@ class ModerationController(
     fun moderate(@RequestBody request: ModerationRequest): ModerationResponse {
         val contentType = contentTypes.random()
 
-        val moderationAsync = supplyAsync({ moderationRepository.findById(request.id) }, pool)
+        val moderationAsync = supplyAsync({ findFromDb(request) }, pool)
 
         val textAsync = supplyAsync({ recognizeText(request, contentType) }, pool)
         val textClassifyResultAsync = textAsync.thenApplyAsync({
-            it?.text?.let { text -> classifyText(TextClassifyRequest(request.id, text, request.additionalDelay)) }
+            it?.text?.let { text -> classifyText(request, text) }
                 ?: ModerationPartialResponse("", Decision.VALID)
         }, pool)
 
@@ -44,7 +45,7 @@ class ModerationController(
 
         val labels = classifyAsync.thenApplyAsync({
             if (it?.decision == Decision.NOT_SUITED)
-                collectLabels(ContentLabelRequest(request.id, request.url, request.additionalDelay))
+                collectLabels(request)
             else
                 null
         }, pool)
@@ -68,39 +69,74 @@ class ModerationController(
             textAsync.get()?.text,
             labels.get()?.labels ?: emptyList()
         ).also {
-            moderationRepository.save(Moderation(request.id, resultDecision.get()))
+            saveToDb(request, resultDecision.get())
         }
     }
 
     private fun recognizeText(request: ModerationRequest, contentType: ContentType): RecognizeResponse? {
+        val textRecognizeRequest = TextRecognizeRequest(request.id, request.url, contentType, request.additionalDelay)
+
+        if (request.mockCalls)
+            return runBlocking { ServerMock.recognizeText(textRecognizeRequest) }
+
         return restTemplate.postForEntity(
             "${Env.SERVICE}/text/recognize",
-            TextRecognizeRequest(request.id, request.url, contentType, request.additionalDelay),
+            textRecognizeRequest,
             RecognizeResponse::class.java
         ).body
     }
 
-    private fun classifyText(classifyRequest: TextClassifyRequest): ModerationPartialResponse? {
+    private fun classifyText(request: ModerationRequest, text: String): ModerationPartialResponse? {
+        val textClassifyRequest = TextClassifyRequest(request.id, text, request.additionalDelay)
+
+        if (request.mockCalls)
+            return runBlocking { ServerMock.classifyText(textClassifyRequest) }
+
         return restTemplate.postForEntity(
             "${Env.SERVICE}/text/classify",
-            classifyRequest,
+            textClassifyRequest,
             ModerationPartialResponse::class.java
         ).body
     }
 
     private fun classifyContent(request: ModerationRequest, contentType: ContentType): ModerationPartialResponse? {
+        val classifyRequest = ContentClassifyRequest(request.id, request.url, contentType, request.additionalDelay)
+
+        if (request.mockCalls)
+            return runBlocking { ServerMock.classifyContent(classifyRequest) }
+
         return restTemplate.postForEntity(
             "${Env.SERVICE}/content/classify",
-            ContentClassifyRequest(request.id, request.url, contentType, request.additionalDelay),
+            classifyRequest,
             ModerationPartialResponse::class.java
         ).body
     }
 
-    private fun collectLabels(request: ContentLabelRequest): LabelsResponse? {
+    private fun collectLabels(request: ModerationRequest): LabelsResponse? {
+        val contentLabelRequest = ContentLabelRequest(request.id, request.url, request.additionalDelay)
+
+        if (request.mockCalls)
+            return runBlocking { ServerMock.contentLabels(contentLabelRequest) }
+
         return restTemplate.postForEntity(
             "${Env.SERVICE}/content/labels",
-            request,
+            contentLabelRequest,
             LabelsResponse::class.java
         ).body
     }
+
+    private fun findFromDb(request: ModerationRequest): Moderation? {
+        if (request.mockCalls)
+            return null
+
+        return moderationRepository.findById(request.id)
+    }
+
+    private fun saveToDb(request: ModerationRequest, resultDecision: Decision) {
+        if (request.mockCalls)
+            return
+
+        moderationRepository.save(Moderation(request.id, resultDecision))
+    }
+
 }

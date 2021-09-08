@@ -14,7 +14,7 @@ class TextController {
     private val possibleValues = Decision.values()
 
     @PostMapping("classify")
-    suspend fun classifyImage(@RequestBody request: TextClassifyRequest): ModerationPartialResponse {
+    suspend fun classifyText(@RequestBody request: TextClassifyRequest): ModerationPartialResponse {
         request.additionalDelay?.let { delay(it) }
 
         return ModerationPartialResponse(

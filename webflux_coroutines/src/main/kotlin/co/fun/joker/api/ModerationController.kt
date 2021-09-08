@@ -24,11 +24,11 @@ class ModerationController(
     suspend fun moderate(@RequestBody request: ModerationRequest): ModerationResponse = coroutineScope {
         val contentType = contentTypes.random()
 
-        val moderationAsync = async { moderationRepository.findById(request.id) }
+        val moderationAsync = async { findInDb(request) }
 
         val textAsync = async { recognizeText(request, contentType) }
         val textClassifyResultAsync = async {
-            textAsync.await().text?.let { text -> classifyText(TextClassifyRequest(request.id, text, request.additionalDelay)) }
+            textAsync.await().text?.let { text -> classifyText(request, text) }
                 ?: ModerationPartialResponse("", Decision.VALID)
         }
 
@@ -42,7 +42,7 @@ class ModerationController(
         val labels = async {
             classify.let {
                 if (it.decision == Decision.NOT_SUITED)
-                    collectLabels(ContentLabelRequest(request.id, request.url, request.additionalDelay))
+                    collectLabels(request)
                 else
                     LabelsResponse("", emptyList())
             }
@@ -65,43 +65,77 @@ class ModerationController(
             textAsync.await().text,
             labels.await().labels
         ).also {
-            moderationRepository.save(Moderation(request.id, it.finalDecision))
+            saveToDb(request, it)
         }
     }
 
     private suspend fun recognizeText(request: ModerationRequest, contentType: ContentType): RecognizeResponse {
+        val textRecognizeRequest = TextRecognizeRequest(request.id, request.url, contentType, request.additionalDelay)
+
+        if (request.mockCalls)
+            return  ServerMock.recognizeText(textRecognizeRequest)
+
         return webClient.post()
             .uri("${Env.SERVICE}/text/recognize")
-            .bodyValue(TextRecognizeRequest(request.id, request.url, contentType, request.additionalDelay))
+            .bodyValue(textRecognizeRequest)
             .retrieve()
             .bodyToMono(RecognizeResponse::class.java)
             .awaitFirst()
     }
 
-    private suspend fun classifyText(classifyRequest: TextClassifyRequest): ModerationPartialResponse {
+    private suspend fun classifyText(request: ModerationRequest, text: String): ModerationPartialResponse {
+        val textRequest = TextClassifyRequest(request.id, text, request.additionalDelay)
+
+        if (request.mockCalls)
+            return  ServerMock.classifyText(textRequest)
+
         return webClient.post()
             .uri( "${Env.SERVICE}/text/classify")
-            .bodyValue(classifyRequest)
+            .bodyValue(textRequest)
             .retrieve()
             .bodyToMono(ModerationPartialResponse::class.java)
             .awaitFirst()
     }
 
     private suspend fun classifyContent(request: ModerationRequest, contentType: ContentType): ModerationPartialResponse {
+        val contentClassifyRequest = ContentClassifyRequest(request.id, request.url, contentType, request.additionalDelay)
+
+        if (request.mockCalls)
+            return  ServerMock.classifyContent(contentClassifyRequest)
+
         return webClient.post()
             .uri( "${Env.SERVICE}/content/classify")
-            .bodyValue(ContentClassifyRequest(request.id, request.url, contentType, request.additionalDelay))
+            .bodyValue(contentClassifyRequest)
             .retrieve()
             .bodyToMono(ModerationPartialResponse::class.java)
             .awaitFirst()
     }
 
-    private suspend fun collectLabels(request: ContentLabelRequest): LabelsResponse {
+    private suspend fun collectLabels(request: ModerationRequest): LabelsResponse {
+        val labelsRequest = ContentLabelRequest(request.id, request.url, request.additionalDelay)
+
+        if (request.mockCalls)
+            return  ServerMock.contentLabels(labelsRequest)
+
         return webClient.post()
             .uri( "${Env.SERVICE}/content/labels")
             .bodyValue(request)
             .retrieve()
             .bodyToMono(LabelsResponse::class.java)
             .awaitFirst()
+    }
+
+    private suspend fun findInDb(request: ModerationRequest): Moderation? {
+        if (request.mockCalls)
+            return null
+
+        return moderationRepository.findById(request.id)
+    }
+
+    private suspend fun saveToDb(request: ModerationRequest, it: ModerationResponse) {
+        if (request.mockCalls)
+            return
+
+        moderationRepository.save(Moderation(request.id, it.finalDecision))
     }
 }

@@ -8,7 +8,8 @@ import kotlinx.serialization.Serializable
 data class ModerationRequest(
     val id: String,
     val url: String,
-    val additionalDelay: Long? = null
+    val additionalDelay: Long? = null,
+    val mockCalls: Boolean = false
 )
 
 @Serializable

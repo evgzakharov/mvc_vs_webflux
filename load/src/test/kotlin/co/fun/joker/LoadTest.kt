@@ -47,7 +47,7 @@ class LoadTest {
     @Test
     fun `test moderation response`() = runBlockingWithDefersU {
         repeat(100) {
-            val response = moderationRequest(moderationUrl)
+            val response = moderationRequest(moderationUrl, mockCalls = true)
             println(response)
         }
     }
@@ -56,14 +56,14 @@ class LoadTest {
     fun `run io test`() = runBlockingWithDefersU {
         val steps = listOf(
             Duration.ofSeconds(0) to 10,
-            Duration.ofSeconds(10) to 200,
-            Duration.ofSeconds(50) to 600,
-            Duration.ofSeconds(61) to 600,
+            Duration.ofSeconds(10) to 100,
+            Duration.ofSeconds(50) to 300,
+            Duration.ofSeconds(61) to 300,
         ).prepare()
 
         val tester = LoadTester(loadData, steps)
-        tester.warming { moderationRequest(moderationUrl) }
-        tester.loadTest { moderationRequest(moderationUrl, additionalDelay = 500) }
+        tester.warming { moderationRequest(moderationUrl, mockCalls = true) }
+        tester.loadTest { moderationRequest(moderationUrl, mockCalls = true) }
 
         DataCollector(loadData).collectData(collectData)
     }
@@ -90,10 +90,19 @@ class LoadTest {
 
     private suspend fun request(url: String): String = ktorClientJava.get(url)
 
-    private suspend fun moderationRequest(moderationUrl: String, additionalDelay: Long? = null): ModerationResponse {
+    private suspend fun moderationRequest(
+        moderationUrl: String,
+        additionalDelay: Long? = null,
+        mockCalls: Boolean = false
+    ): ModerationResponse {
         return ktorClientJava.post(moderationUrl) {
             contentType(ContentType.Application.Json)
-            body = ModerationRequest(UUID.randomUUID().toString(), Random.nextLong().toString(), additionalDelay = additionalDelay)
+            body = ModerationRequest(
+                UUID.randomUUID().toString(),
+                Random.nextLong().toString(),
+                additionalDelay = additionalDelay,
+                mockCalls = mockCalls
+            )
         }
     }
 
