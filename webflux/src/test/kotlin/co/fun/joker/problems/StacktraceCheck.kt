@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono
 class StacktraceCheck {
     @Test
     fun stacktrace() {
-//        Hooks.onOperatorDebug()
+        Hooks.onOperatorDebug()
 
         val result = Mono.just(1)
             .map { it + 1 }

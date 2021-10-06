@@ -20,7 +20,6 @@ class Problems {
     @Test
     fun cache2() {
         val mono: Mono<String> = producer()
-
         val mono2 = mono.map { it + "2" }
 
         println(mono.block())
