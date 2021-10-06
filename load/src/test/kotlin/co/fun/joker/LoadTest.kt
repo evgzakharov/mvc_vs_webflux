@@ -33,7 +33,12 @@ class LoadTest {
     private val host = "http://localhost:8080"
     private val simpleUrl = "$host/joker2021/simple"
     private val cpuLoadUrl = "$host/joker2021/cpu-load"
-    private val chainUrl = "$host/joker2021/chain"
+
+    private val chainMono =  "$host/joker2021/chain-mono"
+    private val chainFlux =  "$host/joker2021/chain-flux"
+    private val chainFlow =  "$host/joker2021/chain-flow"
+    private val chainSuspend =  "$host/joker2021/chain-suspend"
+
     private val moderationUrl = "$host/joker2021/moderation"
 
     private val classificationUrl = "${co.`fun`.joker.api.Env.SERVICE}/content/classify"
@@ -47,7 +52,7 @@ class LoadTest {
     @Test
     fun `test moderation response`() = runBlockingWithDefersU {
         repeat(100) {
-            val response = moderationRequest(moderationUrl, mockCalls = true)
+            val response = request(chainSuspend)
             println(response)
         }
     }
@@ -62,8 +67,8 @@ class LoadTest {
         ).prepare()
 
         val tester = LoadTester(loadData, steps)
-        tester.warming { moderationRequest(moderationUrl, mockCalls = true) }
-        tester.loadTest { moderationRequest(moderationUrl, mockCalls = true) }
+        tester.warming { request(chainSuspend) }
+        tester.loadTest { request(chainSuspend) }
 
         DataCollector(loadData).collectData(collectData)
     }

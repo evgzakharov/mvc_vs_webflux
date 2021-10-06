@@ -1,4 +1,4 @@
-#server:
-#  tomcat:
-#    threads:
-#      max: 200
+server:
+  tomcat:
+    threads:
+      max: 200

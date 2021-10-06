@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 
-./gradlew :mvc:build
+./gradlew -x test :mvc:build
 
 docker run -v "$(PWD)/mvc/build/libs/mvc.jar:/mvc.jar" \
     -m 512m --memory-swap 512m --cpus 2  \

@@ -3,6 +3,7 @@ package co.`fun`.joker.api
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @RestController
@@ -22,8 +23,8 @@ class SimpleController {
         return Mono.just(sum)
     }
 
-    @GetMapping("chain")
-    fun chain(): Mono<Int> {
+    @GetMapping("chain-mono")
+    fun chainMono(): Mono<Int> {
         var result = Mono.just(5)
 
         for (i in 1..1_000) {
@@ -31,5 +32,16 @@ class SimpleController {
         }
 
         return result
+    }
+
+    @GetMapping("chain-flux")
+    fun chainFlux(): Mono<Int> {
+        var result = Flux.just(5)
+
+        for (i in 1..1_000) {
+            result = result.map { it + i }
+        }
+
+        return result.single()
     }
 }

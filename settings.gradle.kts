@@ -1,4 +1,4 @@
-rootProject.name = "joker_2021"
+rootProject.name = "mvc_vs_webflux"
 
 include(
     "common",

@@ -24,8 +24,8 @@ class SimpleController {
         return sum
     }
 
-    @GetMapping("chain")
-    suspend fun chain(): Int {
+    @GetMapping("chain-flow")
+    suspend fun chainFlow(): Int {
         var result = flowOf(5)
 
         for (i in 1..1_000) {
@@ -33,5 +33,20 @@ class SimpleController {
         }
 
         return result.first()
+    }
+
+    @GetMapping("chain-suspend")
+    suspend fun chainSuspend(): Int {
+        var result = 5
+
+        for (i in 1..1_000) {
+            result = result.chainChange { it + i }
+        }
+
+        return result
+    }
+
+    private fun Int.chainChange(block: (Int) -> Int): Int {
+        return block(this)
     }
 }

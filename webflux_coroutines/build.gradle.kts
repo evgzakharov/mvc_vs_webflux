@@ -25,4 +25,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinCoroutinesVersion")
 
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springVersion")
+
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:$kotlinCoroutinesVersion")
 }
