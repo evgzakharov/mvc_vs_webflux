@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val springVersion: String by project
+val jacksonVersion: String by project
 val kotlinCoroutinesVersion: String by project
 extra["kotlin-coroutines.version"] = kotlinCoroutinesVersion
 
@@ -12,11 +13,11 @@ version = "0.0.1-SNAPSHOT"
 description = "joker"
 
 plugins {
-    kotlin("jvm") version "1.5.31"
-    kotlin("plugin.serialization") version "1.5.31" apply false
-    kotlin("plugin.spring") version "1.5.31" apply false
+    kotlin("jvm") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10" apply false
+    kotlin("plugin.spring") version "1.6.10" apply false
     id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
-    id("org.springframework.boot") version "2.5.4" apply false
+    id("org.springframework.boot") version "2.6.3" apply false
 }
 
 repositories {
@@ -45,7 +46,7 @@ subprojects {
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinCoroutinesVersion")
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$kotlinCoroutinesVersion")
 
-        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.5")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
         testImplementation("io.mockk:mockk:$mockkVersion")
         testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
@@ -55,7 +56,7 @@ subprojects {
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
-            jvmTarget = "16"
+            jvmTarget = "17"
             freeCompilerArgs = listOf("-Xjsr305=strict")
         }
     }

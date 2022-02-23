@@ -1,4 +1,4 @@
-echo 'GET http://localhost:8080/joker2021' | \
+echo 'GET http://localhost:8080/compare' | \
     vegeta attack -rate 5000 -duration 10m | vegeta encode | \
     jaggr @count=rps \
           hist\[100,200,300,400,500\]:code \

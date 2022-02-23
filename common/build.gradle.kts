@@ -5,6 +5,5 @@ val kotlinSerializationVersion: String by project
 
 dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinSerializationVersion")
 }
