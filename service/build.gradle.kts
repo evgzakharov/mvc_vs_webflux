@@ -8,7 +8,7 @@ tasks.withType<Jar> {
     manifest {
         attributes(
             mapOf(
-                "Start-Class" to "co.fun.joker.ApplicationKt",
+                "Start-Class" to "co.fun.compare.ApplicationKt",
                 "Implementation-Version" to project.version
             )
         )

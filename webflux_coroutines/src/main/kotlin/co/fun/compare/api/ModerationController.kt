@@ -5,11 +5,15 @@ import co.`fun`.compare.repository.ModerationRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.reactive.awaitFirst
+import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.netty.http.client.HttpClient
+import reactor.netty.resources.ConnectionProvider
+
 
 @RestController
 @RequestMapping("/compare")
@@ -17,7 +21,17 @@ class ModerationController(
     webClientBuilder: WebClient.Builder,
     private val moderationRepository: ModerationRepository
 ) {
-    private val webClient = webClientBuilder.build()
+    private val webClient = run {
+        val connectionProvider = ConnectionProvider.builder("myConnectionPool")
+            .maxConnections(1_000)
+            .pendingAcquireMaxCount(10_000)
+            .build()
+        val clientHttpConnector = ReactorClientHttpConnector(HttpClient.create(connectionProvider))
+
+        webClientBuilder
+            .clientConnector(clientHttpConnector)
+            .build()
+    }
     private val contentTypes = ContentType.values()
 
     @PostMapping("moderation")

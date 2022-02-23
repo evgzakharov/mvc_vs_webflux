@@ -27,7 +27,6 @@ class LoadTester(
     private val fileWriteExecutor = CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
     private val warmingTime = ofSeconds(30).toMillis()
-    private val warmingTasks = 100
     private val loadTime = steps.last().first
     private val increaseTime = ofSeconds(1).toMillis()
 
@@ -52,7 +51,7 @@ class LoadTester(
         }
     }
 
-    suspend fun <T> warming(request: suspend () -> T) = coroutineScope {
+    suspend fun <T> warming(warmingTasks: Int = 100, request: suspend () -> T) = coroutineScope {
         println("start warming..")
         val tasks = (1..warmingTasks).map {
             launch {

@@ -10,7 +10,7 @@ val junitVersion: String by project
 
 group = "co.fun"
 version = "0.0.1-SNAPSHOT"
-description = "joker"
+description = "compare"
 
 plugins {
     kotlin("jvm") version "1.6.10"

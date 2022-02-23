@@ -6,7 +6,7 @@ plugins {
 }
 
 application {
-    mainClass.set("co.fun.joker.MainKt")
+    mainClass.set("co.fun.compare.MainKt")
 }
 
 dependencies {
