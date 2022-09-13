@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 
-host=nerumb@192.168.1.74
+host=nerumb@192.168.1.75
 
 ./gradlew :service:build
 

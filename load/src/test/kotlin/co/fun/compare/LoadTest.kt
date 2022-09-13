@@ -5,10 +5,10 @@ import co.`fun`.compare.util.DataCollector
 import co.`fun`.compare.util.HttpRequester
 import co.`fun`.compare.util.LoadTester
 import co.`fun`.compare.util.Method
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.json.serializer.KotlinxSerializer
+//import io.ktor.client.HttpClient
+//import io.ktor.client.engine.apache.Apache
+//import io.ktor.client.features.json.JsonFeature
+//import io.ktor.client.features.json.serializer.KotlinxSerializer
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Duration
@@ -18,15 +18,15 @@ class LoadTest {
     private val loadData = File("times/test.txt").apply { parentFile.mkdirs() }
     private val collectData = File("times/test.csv").apply { parentFile.mkdirs() }
 
-    private val ktorClientJava = HttpClient(Apache) {
-        install(JsonFeature) {
-            serializer = KotlinxSerializer()
-        }
-    }
+//    private val ktorClientJava = HttpClient(Apache) {
+//        install(JsonFeature) {
+//            serializer = KotlinxSerializer()
+//        }
+//    }
 
     private val requester = HttpRequester()
 
-    private val host = "http://localhost:8080"
+    private val host = "http://0.0.0.0:8080"
     private val simpleUrl = "$host/compare/simple"
     private val cpuLoadUrl = "$host/compare/cpu-load"
 
@@ -46,7 +46,7 @@ class LoadTest {
     @Test
     fun `test moderation response`() = runBlockingWithDefersU {
         repeat(100) {
-            val response = request(chainSuspend)
+            val response = request(simpleUrl)
             println(response)
         }
     }
@@ -55,14 +55,14 @@ class LoadTest {
     fun `run io test`() = runBlockingWithDefersU {
         val steps = listOf(
             Duration.ofSeconds(0) to 1,
-            Duration.ofSeconds(10) to 300,
-            Duration.ofSeconds(50) to 3000,
-            Duration.ofSeconds(61) to 3000,
+            Duration.ofSeconds(10) to 100,
+            Duration.ofSeconds(50) to 300,
+            Duration.ofSeconds(61) to 300,
         ).prepare()
 
         val tester = LoadTester(loadData, steps)
-        tester.warming(400) { moderationRequest(moderationUrl, 1L, mockCalls = true) }
-        tester.loadTest { moderationRequest(moderationUrl, 500L, mockCalls = true) }
+        tester.warming(400) { request(simpleUrl) }
+        tester.loadTest { request(simpleUrl) }
 
         DataCollector(loadData).collectData(collectData)
     }
