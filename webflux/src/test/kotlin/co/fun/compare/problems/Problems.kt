@@ -9,7 +9,7 @@ class Problems {
         val mono: Mono<String> = Mono.fromCallable {
             println("create new string")
             "test"
-        }.cache()
+        }
 
         val mono2 = mono.map { it + "2" }
 
