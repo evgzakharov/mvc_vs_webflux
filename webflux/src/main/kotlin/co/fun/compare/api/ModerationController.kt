@@ -51,8 +51,8 @@ class ModerationController(
                 .switchIfEmpty(classifyContent(request, contentType))
         }.cache()
 
-        val labelsAsync = classifyAsync.flatMap {
-            if (it?.decision == Decision.NOT_SUITED)
+        val labelsAsync = classifyAsync.flatMap { classify ->
+            if (classify?.decision == Decision.NOT_SUITED)
                 collectLabels(request)
             else
                 Mono.just(LabelsResponse("", emptyList()))

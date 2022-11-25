@@ -5,6 +5,7 @@ include(
     "load",
     "service",
     "mvc",
+    "mvc_undertow",
     "webflux",
     "webflux_coroutines",
 )

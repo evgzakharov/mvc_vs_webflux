@@ -2,7 +2,6 @@ package co.`fun`.compare.util
 
 import co.`fun`.compare.runBlockingWithDefersU
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -33,7 +32,7 @@ class LoadTester(
     suspend fun <T> loadTest(request: suspend () -> T) = runBlockingWithDefersU {
         val output = loadData.bufferedWriter().apply { defer { close() } }
 
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val scope = CoroutineScope(SupervisorJob())
 
         val fileJob = runFileWriteJob(output)
         val currentTasks = loadTest(Instant.now().toEpochMilli(), scope, request)
@@ -97,8 +96,8 @@ class LoadTester(
         val delta = (nextStep.second - currentStep.second).toFloat() /
             ((nextStep.first - currentStep.first).coerceAtLeast(1) / 1000)
 
-        val neededCount =
-            currentStep.second + (delta * (seconds - currentStep.first / 1000).coerceAtLeast(0)).roundToInt()
+        val neededCount = currentStep.second + (delta * (seconds - currentStep.first / 1000)
+            .coerceAtLeast(0)).roundToInt()
 
         val current = currentTasks.size
 

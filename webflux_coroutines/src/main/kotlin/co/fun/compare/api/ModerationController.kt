@@ -54,12 +54,10 @@ class ModerationController(
         }
 
         val labels = async {
-            classify.let {
-                if (it.decision == Decision.NOT_SUITED)
-                    collectLabels(request)
-                else
-                    LabelsResponse("", emptyList())
-            }
+            if (classify.decision == Decision.NOT_SUITED)
+                collectLabels(request)
+            else
+                LabelsResponse("", emptyList())
         }
 
         val textClassify = textClassifyResultAsync.await()

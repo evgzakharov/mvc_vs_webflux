@@ -43,8 +43,8 @@ class ModerationController(
             }, pool)
         }
 
-        val labels = classifyAsync.thenApplyAsync({ classify ->
-            if (classify?.decision == Decision.NOT_SUITED)
+        val labels = classifyAsync.thenApplyAsync({
+            if (it?.decision == Decision.NOT_SUITED)
                 collectLabels(request)
             else
                 null
